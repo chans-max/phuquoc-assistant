@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0e7490">
+<title>푸꾸옥 촬영 비서</title>
+<style>
+  :root {
+    --bg: #f4f7f9; --card: #ffffff; --ink: #16242e; --sub: #5b7184;
+    --accent: #0e7490; --accent-soft: #e0f2f7; --line: #e3eaef;
+    --good: #15803d; --warn: #b45309; --now: #0e7490; --done: #9fb2bf;
+    --chip: #eef4f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1419; --card: #16212a; --ink: #e8eef2; --sub: #8da3b3;
+      --accent: #38bdf8; --accent-soft: #11303d; --line: #243441;
+      --good: #4ade80; --warn: #fbbf24; --now: #38bdf8; --done: #4d6373;
+      --chip: #1d2c37;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    max-width: 560px; margin: 0 auto; padding: 16px 16px 96px;
+    line-height: 1.5;
+  }
+  header { display: flex; align-items: baseline; justify-content: space-between; margin: 4px 2px 14px; }
+  header h1 { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+  header .clock { font-size: 12px; color: var(--sub); font-variant-numeric: tabular-nums; text-align: right; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+
+  /* hero */
+  #hero .label { font-size: 12px; font-weight: 700; color: var(--now); margin-bottom: 6px; letter-spacing: 0.5px; }
+  #hero .title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 4px; }
+  #hero .meta { font-size: 13.5px; color: var(--sub); white-space: pre-line; }
+  #hero .count { display: inline-block; margin-top: 10px; background: var(--accent-soft); color: var(--accent);
+    font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+  #hero .tips { margin-top: 10px; font-size: 13px; color: var(--sub); }
+
+  /* tabs */
+  nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 560px;
+    display: flex; background: var(--card); border-top: 1px solid var(--line);
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); z-index: 10; }
+  nav button { flex: 1; background: none; border: none; color: var(--sub); font-size: 11.5px; font-weight: 600;
+    padding: 7px 0 5px; cursor: pointer; border-radius: 10px; font-family: inherit; }
+  nav button .ico { display: block; font-size: 19px; margin-bottom: 2px; }
+  nav button.on { color: var(--accent); background: var(--accent-soft); }
+
+  section { display: none; } section.on { display: block; }
+
+  /* chat */
+  #chatlog { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .msg { max-width: 88%; padding: 10px 14px; border-radius: 16px; font-size: 14.5px; }
+  .msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.bot { align-self: flex-start; background: var(--card); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .msg.bot b { color: var(--accent); }
+  .msg.bot ul { padding-left: 18px; margin: 4px 0; }
+  .msg.bot .small { font-size: 12.5px; color: var(--sub); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chips button { background: var(--chip); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+    font-size: 12.5px; font-weight: 600; padding: 7px 12px; cursor: pointer; font-family: inherit; }
+  #askbar { display: flex; gap: 8px; }
+  #askbar input { flex: 1; background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; font-size: 15px; color: var(--ink); font-family: inherit; outline: none; }
+  #askbar input:focus { border-color: var(--accent); }
+  #askbar button { background: var(--accent); color: #fff; border: none; border-radius: 12px;
+    padding: 0 18px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+  /* timeline */
+  .dayhead { font-size: 14px; font-weight: 800; margin: 18px 2px 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .dayhead .tz { font-size: 11px; font-weight: 600; color: var(--sub); }
+  .evt { display: flex; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 8px; }
+  .evt .t { min-width: 78px; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--sub); padding-top: 1px; }
+  .evt .body .n { font-size: 14.5px; font-weight: 700; letter-spacing: -0.2px; }
+  .evt .body .d { font-size: 12.5px; color: var(--sub); margin-top: 2px; }
+  .evt.now { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .evt.now .t { color: var(--accent); }
+  .evt.done { opacity: 0.5; }
+  .badge { font-size: 10.5px; font-weight: 800; color: #fff; background: var(--accent); border-radius: 6px; padding: 1px 7px; margin-left: 6px; vertical-align: 2px; }
+
+  /* checklist */
+  .cathead { font-size: 13px; font-weight: 800; color: var(--sub); margin: 16px 2px 6px; }
+  .item { display: flex; align-items: center; gap: 11px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 11px 14px; margin-bottom: 6px; cursor: pointer; user-select: none; }
+  .item input { width: 19px; height: 19px; accent-color: var(--accent); flex-shrink: 0; }
+  .item .nm { font-size: 14.5px; font-weight: 600; }
+  .item .nt { font-size: 12px; color: var(--sub); }
+  .item.ok .nm { text-decoration: line-through; color: var(--done); }
+  #packsum { font-size: 13px; color: var(--sub); margin: 2px 2px 4px; }
+
+  /* staff */
+  .person { display: flex; justify-content: space-between; align-items: center; background: var(--card);
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 6px; }
+  .person .nm { font-size: 14.5px; font-weight: 700; }
+  .person .rl { font-size: 12px; color: var(--sub); margin-left: 6px; font-weight: 600; }
+  .person a { color: var(--accent); font-size: 13.5px; font-weight: 700; text-decoration: none; }
+  .person .star { font-size: 11px; color: var(--warn); font-weight: 700; display: block; }
+
+  .info-row { display: flex; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .k { color: var(--sub); }
+  .info-row .v { font-weight: 700; text-align: right; }
+  .src { font-size: 12px; color: var(--sub); text-align: center; margin-top: 14px; }
+  .src a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📸 푸꾸옥 촬영 비서</h1>
+  <div class="clock" id="clock"></div>
+</header>
+
+<div class="card" id="hero"></div>
+
+<section id="tab-ask" class="on">
+  <div id="chatlog"></div>
+  <div class="chips" id="chips"></div>
+  <div id="askbar">
+    <input id="q" type="text" placeholder="궁금한 걸 물어보세요 (예: 지금 뭐 해?)" autocomplete="off">
+    <button onclick="ask()">전송</button>
+  </div>
+</section>
+
+<section id="tab-plan"><div id="timeline"></div></section>
+
+<section id="tab-pack">
+  <div id="packsum"></div>
+  <div id="packlist"></div>
+</section>
+
+<section id="tab-staff">
+  <div id="staff"></div>
+  <div class="card" style="margin-top:14px">
+    <div class="info-row"><span class="k">프로젝트</span><span class="v">Global diner Conference in 베트남 촬영</span></div>
+    <div class="info-row"><span class="k">기간</span><span class="v">2026. 6. 10 ~ 6. 13 (3박 4일)</span></div>
+    <div class="info-row"><span class="k">파트너</span><span class="v">이음</span></div>
+    <div class="info-row"><span class="k">경비</span><span class="v">6,335,000동 + 300달러</span></div>
+    <div class="info-row"><span class="k">소통 담당</span><span class="v">최재주 책임 <a href="tel:010-8911-0424" style="color:var(--accent)">010-8911-0424</a></span></div>
+    <div class="info-row"><span class="k">출국 미팅포인트</span><span class="v">인천 T1 3층 L카운터<br>(12번 게이트) 앞</span></div>
+  </div>
+  <p class="src">데이터 출처: <a href="https://app.notion.com/p/culturalcontents/e0f2104f3d584859b34bc0517ffe81e3" target="_blank">Notion 일정표 원본 보기 ↗</a><br>2026-06-10 기준 스냅샷 · 일정 변경 시 Notion 확인</p>
+</section>
+
+<nav>
+  <button class="on" data-tab="ask"><span class="ico">💬</span>비서</button>
+  <button data-tab="plan"><span class="ico">🗓️</span>일정</button>
+  <button data-tab="pack"><span class="ico">🎒</span>준비물</button>
+  <button data-tab="staff"><span class="ico">👥</span>스탭·정보</button>
+</nav>
+
+<script>
+// ───────────────────────── 데이터 (Notion 스냅샷 2026-06-10) ─────────────────────────
+// tz: 'KR' = 한국시간(UTC+9), 'VN' = 푸꾸옥 현지시간(UTC+7)
+const EVENTS = [
+  { date:'2026-06-10', start:'13:00', end:'17:20', tz:'KR', title:'인천공항 도착/미팅포인트 확인 및 T1촬영',
+    desc:'1터미널 3층 L카운터(12번 게이트) 앞 집결', loc:'인천공항 T1 3층 L카운터(12번 게이트) 앞',
+    tips:['여권·경비(달러/동) 소지 확인','보조배터리는 기내 휴대','출국 전 외장하드 용량 확인'] },
+  { date:'2026-06-10', start:'17:20', end:'21:25', endTz:'VN', tz:'KR', title:'제주항공 7C2315 (인천→푸꾸옥)',
+    desc:'항공편 이동 · 17:20 인천 출발(한국시간) → 21:25 푸꾸옥 도착(현지시간)', loc:'기내',
+    tips:['도착하면 시계를 현지시간(-2시간)으로','입국 서류 미리 준비'] },
+  { date:'2026-06-10', start:'21:25', end:'23:00', tz:'VN', title:'푸꾸옥 도착 후 호텔 이동/호텔 촬영',
+    desc:'호텔 도착 후 영상 촬영', loc:'푸꾸옥 공항 → 호텔',
+    tips:['카메라 FX30·배터리 바로 꺼낼 수 있게','야간 촬영 대비 렌즈 선택'] },
+
+  { date:'2026-06-11', start:'07:00', tz:'VN', title:'스탭 조식', desc:'', loc:'호텔 조식당', tips:[] },
+  { date:'2026-06-11', start:'08:00', tz:'VN', title:'OBK브랜드데이 선발대 호텔 출발 (오션 객실동)',
+    desc:'', loc:'호텔 오션 객실동 앞', tips:['행사장 스케치: FX30·렌즈·배터리 풀세팅','SD카드 여유분 휴대'] },
+  { date:'2026-06-11', start:'14:00', tz:'VN', title:'혼똔섬 투어버스/내부 촬영 후 호텔 이동',
+    desc:'촬영 포인트: 해상 케이블카, 워터파크, 어트랙션', loc:'혼똔섬 (해상 케이블카)',
+    tips:['수영복·모자·운동화','물 근처 촬영 — 장비 방수 주의','보조배터리 휴대'] },
+  { date:'2026-06-11', start:'18:00', tz:'VN', title:'그랜드월드 이동 및 스케치 촬영 (껌냐레스토랑)',
+    desc:'야시장/로컬음식(철판아이스크림·해산물·열대과일), 곤돌라, 분수쇼, 식당/음식 촬영', loc:'그랜드월드 · 껌냐레스토랑',
+    tips:['야간 촬영 — 배터리·SD카드 여유분','분수쇼 시간 미리 확인'] },
+
+  { date:'2026-06-12', start:'06:00', tz:'VN', title:'월드컵 경기 관람/행사장 스케치 (선라이즈볼룸)',
+    desc:'새벽 일정 — 전날 일찍 취침 권장', loc:'선라이즈볼룸',
+    tips:['새벽 집합 — 알람 필수','전날 배터리 충전·데이터 백업'] },
+  { date:'2026-06-12', start:'10:00', tz:'VN', title:'호텔 오션동 스케치 촬영 후 빈원더스 이동',
+    desc:'촬영 포인트: 아쿠아리움, 어트랙션, 워터파크', loc:'호텔 오션동 → 빈원더스',
+    tips:['수영복·모자','실내(아쿠아리움) 저조도 대비 렌즈'] },
+  { date:'2026-06-12', start:'16:20', tz:'VN', title:'선시그니처갤러리 행사장 스케치',
+    desc:'', loc:'선시그니처갤러리', tips:[] },
+  { date:'2026-06-12', start:'18:05', tz:'VN', title:'그랜드월드 소나시야시장 이동 (오션동)',
+    desc:'', loc:'그랜드월드 소나시야시장', tips:['야간 촬영 — 배터리 잔량 확인'] },
+
+  { date:'2026-06-13', start:'11:40', tz:'VN', title:'호텔 코랄동 체크아웃 촬영',
+    desc:'', loc:'호텔 코랄동', tips:['객실에 짐·장비 두고 온 것 없는지 확인','외장하드에 촬영분 백업'] },
+  { date:'2026-06-13', start:'12:00', end:'13:00', tz:'VN', title:'1~6호차 체크아웃 후 중식 (1호차)',
+    desc:'', loc:'1호차', tips:[] },
+  { date:'2026-06-13', start:'14:30', end:'16:00', tz:'VN', title:'오메가SPA 대기/마사지샵·카페 스케치 촬영',
+    desc:'', loc:'오메가SPA', tips:[] },
+  { date:'2026-06-13', start:'16:00', tz:'VN', title:'한국관 이동 스케치 촬영',
+    desc:'', loc:'한국관', tips:[] },
+  { date:'2026-06-13', start:'20:00', tz:'VN', title:'공항 이동 (제주항공 본대)',
+    desc:'5–9호차 / 동행: 염초희 대리, 박지운 책임', loc:'5–9호차 탑승',
+    tips:['여권 소지 확인','수하물 정리 — 배터리류는 기내로'] },
+  { date:'2026-06-13', start:'22:25', tz:'VN', title:'제주항공 출발 (푸꾸옥→인천)',
+    desc:'푸꾸옥 출발', loc:'푸꾸옥 공항', tips:[] },
+
+  { date:'2026-06-14', start:'06:05', tz:'KR', title:'입국수속',
+    desc:'인천공항 도착(한국시간)', loc:'인천공항', tips:['수고하셨습니다! 🎉'] },
+];
+
+const STAFF = [
+  { name:'김재영', role:'대표' }, { name:'최두영', role:'이사' },
+  { name:'손광현', role:'팀장' }, { name:'구본혁', role:'팀장' },
+  { name:'박정홍', role:'팀장' }, { name:'신해경', role:'팀장' },
+  { name:'최재주', role:'책임', tel:'010-8911-0424', note:'소통 담당자' },
+  { name:'박지운', role:'책임', note:'귀국 공항이동 동행' },
+  { name:'염초희', role:'대리', note:'귀국 공항이동 동행' },
+  { name:'김서준', role:'주임' },
+  { name:'김민정', role:'매니저' }, { name:'방상민', role:'매니저' },
+  { name:'김채린', role:'매니저' }, { name:'박정현', role:'매니저' },
+  { name:'이대현', role:'MC' }, { name:'장진호', role:'OP' },
+];
+
+const PACK = [
+  { cat:'서류/여행', name:'여권', done:true },
+  { cat:'서류/여행', name:'경비', done:true, note:'6,335,000동 + 300달러' },
+  { cat:'장비', name:'카메라 FX30', done:true },
+  { cat:'장비', name:'렌즈', done:true, note:'70-200 / 24-70 / 18-105' },
+  { cat:'장비', name:'삼각대(트라이)', done:true, note:'현지감독 대여' },
+  { cat:'장비', name:'노트북(당일 백업용)', done:false },
+  { cat:'장비', name:'외장하드', done:true, note:'미리 용량 확보' },
+  { cat:'액세서리/소모품', name:'SD카드', done:true, note:'5장' },
+  { cat:'액세서리/소모품', name:'배터리', done:true, note:'6개' },
+  { cat:'액세서리/소모품', name:'보조배터리', done:true, note:'2개 · 기내 휴대' },
+  { cat:'액세서리/소모품', name:'블로워', done:true },
+  { cat:'액세서리/소모품', name:'스트랩', done:true },
+  { cat:'액세서리/소모품', name:'카메라가방', done:true },
+  { cat:'의류/개인', name:'수영복', done:true, note:'워터파크 촬영일(11·12일)' },
+  { cat:'의류/개인', name:'모자', done:true },
+  { cat:'의류/개인', name:'운동화', done:true },
+  { cat:'의류/개인', name:'비상약', done:false },
+  { cat:'의류/개인', name:'우산(우의)', done:false, note:'우기 대비' },
+];
+
+// ───────────────────────── 시간 유틸 ─────────────────────────
+const TZOFF = { KR: 9 * 60, VN: 7 * 60 }; // 분 단위 UTC 오프셋 (둘 다 DST 없음)
+function toEpoch(dateStr, timeStr, tz) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = timeStr.split(':').map(Number);
+  return Date.UTC(y, m - 1, d, hh, mm) - TZOFF[tz] * 60000;
+}
+// 각 일정의 시작/종료 epoch 계산. 종료 미지정 시 같은 날 다음 일정 시작 or +2.5h
+EVENTS.forEach((e, i) => {
+  e.s = toEpoch(e.date, e.start, e.tz);
+  if (e.end) e.e = toEpoch(e.date, e.end, e.endTz || e.tz);
+  else {
+    const nxt = EVENTS[i + 1];
+    e.e = (nxt && nxt.date === e.date) ? toEpoch(nxt.date, nxt.start, nxt.tz) : e.s + 150 * 60000;
+  }
+});
+
+const DAYNAMES = ['일','월','화','수','목','금','토'];
+function fmtDay(dateStr) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return `${m}월 ${d}일 (${DAYNAMES[new Date(Date.UTC(y,m-1,d)).getUTCDay()]})`;
+}
+function fmtDur(ms) {
+  const min = Math.max(0, Math.round(ms / 60000));
+  const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60), m = min % 60;
+  let s = '';
+  if (d) s += d + '일 ';
+  if (h) s += h + '시간 ';
+  if (m || !s) s += m + '분';
+  return s.trim();
+}
+function nowState() {
+  const now = Date.now();
+  let current = null, next = null, prev = null;
+  for (const e of EVENTS) {
+    if (now >= e.s && now < e.e) current = e;
+    if (e.e <= now) prev = e;
+    if (!next && e.s > now) next = e;
+  }
+  return { now, current, next, prev };
+}
+function evtTimeLabel(e) {
+  return e.start + (e.end ? '–' + e.end : '') + (e.tz === 'KR' ? ' KST' : '');
+}
+
+// ───────────────────────── 지금/다음 히어로 ─────────────────────────
+function renderHero() {
+  const { now, current, next } = nowState();
+  const el = document.getElementById('hero');
+  let h = '';
+  if (now < EVENTS[0].s - 86400000 * 2) {
+    h = `<div class="label">출장 준비</div><div class="title">6/10(수) 13:00 인천공항 T1 집결</div>
+         <div class="meta">아직 출장 전이에요. 준비물 탭에서 짐을 챙겨두세요.</div>`;
+  } else if (current) {
+    h = `<div class="label">▶ 지금 진행 중</div>
+         <div class="title">${current.title}</div>
+         <div class="meta">🕐 ${evtTimeLabel(current)}${current.loc ? '\n📍 ' + current.loc : ''}${current.desc ? '\n' + current.desc : ''}</div>`;
+    if (next) h += `<div class="count">다음 일정까지 ${fmtDur(next.s - now)} · ${next.start} ${next.title}</div>`;
+    if (current.tips.length) h += `<div class="tips">💡 ${current.tips.join(' · ')}</div>`;
+  } else if (next) {
+    h = `<div class="label">다음 일정</div>
+         <div class="title">${next.title}</div>
+         <div class="meta">🕐 ${fmtDay(next.date)} ${evtTimeLabel(next)}${next.loc ? '\n📍 ' + next.loc : ''}${next.desc ? '\n' + next.desc : ''}</div>
+         <div class="count">⏳ ${fmtDur(next.s - now)} 남음</div>`;
+    if (next.tips.length) h += `<div class="tips">💡 ${next.tips.join(' · ')}</div>`;
+  } else {
+    h = `<div class="label">일정 종료</div><div class="title">모든 일정이 끝났어요 🎉</div>
+         <div class="meta">푸꾸옥 촬영 수고 많으셨습니다!</div>`;
+  }
+  el.innerHTML = h;
+}
+
+function renderClock() {
+  const now = new Date();
+  const fmt = tz => new Intl.DateTimeFormat('ko-KR', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+  document.getElementById('clock').innerHTML = `🇻🇳 푸꾸옥 ${fmt('Asia/Ho_Chi_Minh')}<br>🇰🇷 한국 ${fmt('Asia/Seoul')}`;
+}
+
+// ───────────────────────── 일정 타임라인 ─────────────────────────
+function renderTimeline() {
+  const { now } = nowState();
+  let h = '', lastDate = '';
+  for (const e of EVENTS) {
+    if (e.date !== lastDate) {
+      lastDate = e.date;
+      const tzs = new Set(dayEvents(e.date).map(x => x.tz));
+      const tzLabel = tzs.size > 1 ? '🇰🇷→🇻🇳 시차 주의 (현지 -2시간)' : (e.tz === 'KR' ? '🇰🇷 한국시간' : '🇻🇳 현지시간');
+      h += `<div class="dayhead">${fmtDay(e.date)}<span class="tz">${tzLabel}</span></div>`;
+    }
+    const cls = now >= e.e ? 'done' : (now >= e.s ? 'now' : '');
+    h += `<div class="evt ${cls}">
+      <div class="t">${evtTimeLabel(e)}</div>
+      <div class="body"><div class="n">${e.title}${cls === 'now' ? '<span class="badge">NOW</span>' : ''}</div>
+      ${e.desc ? `<div class="d">${e.desc}</div>` : ''}</div></div>`;
+  }
+  document.getElementById('timeline').innerHTML = h;
+}
+
+// ───────────────────────── 준비물 ─────────────────────────
+function packState(name, def) {
+  const v = localStorage.getItem('pack:' + name);
+  return v === null ? def : v === '1';
+}
+function renderPack() {
+  const cats = [...new Set(PACK.map(p => p.cat))];
+  let h = '', total = 0, ok = 0;
+  for (const c of cats) {
+    h += `<div class="cathead">${c}</div>`;
+    for (const p of PACK.filter(x => x.cat === c)) {
+      const checked = packState(p.name, p.done);
+      total++; if (checked) ok++;
+      h += `<label class="item ${checked ? 'ok' : ''}">
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePack('${p.name}', this.checked)">
+        <span><span class="nm">${p.name}</span>${p.note ? ` <span class="nt">· ${p.note}</span>` : ''}</span>
+      </label>`;
+    }
+  }
+  document.getElementById('packlist').innerHTML = h;
+  document.getElementById('packsum').textContent = `✅ ${ok}/${total} 챙김 완료 · 체크 상태는 이 기기에 저장돼요`;
+}
+function togglePack(name, v) { localStorage.setItem('pack:' + name, v ? '1' : '0'); renderPack(); }
+
+// ───────────────────────── 스탭 ─────────────────────────
+function renderStaff() {
+  document.getElementById('staff').innerHTML = STAFF.map(p => `
+    <div class="person">
+      <div><span class="nm">${p.name}</span><span class="rl">${p.role}</span>
+      ${p.note ? `<span class="star">★ ${p.note}</span>` : ''}</div>
+      ${p.tel ? `<a href="tel:${p.tel}">${p.tel}</a>` : ''}
+    </div>`).join('');
+}
+
+// ───────────────────────── 비서 Q&A ─────────────────────────
+const QUICKS = ['지금 뭐 해야 해?', '다음 일정은?', '오늘 일정', '어디로 가야 해?', '뭘 챙겨야 해?', '담당자 연락처', '경비 얼마?', '비행기 정보'];
+
+function evtLine(e, withDay) {
+  return `<b>${withDay ? fmtDay(e.date) + ' ' : ''}${evtTimeLabel(e)}</b> ${e.title}${e.loc ? `<br><span class="small">📍 ${e.loc}</span>` : ''}${e.desc ? `<br><span class="small">${e.desc}</span>` : ''}`;
+}
+function tipsLine(e) { return e.tips.length ? `<br><span class="small">💡 ${e.tips.join(' · ')}</span>` : ''; }
+
+function dayEvents(dateStr) { return EVENTS.filter(e => e.date === dateStr); }
+function listDay(dateStr, label) {
+  const evs = dayEvents(dateStr);
+  if (!evs.length) return `${label}에는 등록된 일정이 없어요.`;
+  const { now } = nowState();
+  return `<b>${label} 일정</b> (${evs.length}건)<ul>` + evs.map(e => {
+    const st = now >= e.e ? '✓ ' : (now >= e.s ? '▶ ' : '');
+    return `<li>${st}<b>${evtTimeLabel(e)}</b> ${e.title}</li>`;
+  }).join('') + '</ul>';
+}
+
+function answer(qRaw) {
+  const q = qRaw.toLowerCase().replace(/\s+/g, '');
+  const { now, current, next } = nowState();
+
+  // 스탭 이름 직접 검색
+  const person = STAFF.find(p => q.includes(p.name));
+  if (person) {
+    return `<b>${person.name} ${person.role}</b>${person.note ? ` — ${person.note}` : ''}${person.tel ? `<br>📞 <a href="tel:${person.tel}">${person.tel}</a>` : '<br><span class="small">연락처는 등록돼 있지 않아요. 소통 담당 최재주 책임(010-8911-0424)을 통해 확인하세요.</span>'}`;
+  }
+
+  // 연락처/담당자
+  if (/연락처|전화|담당|콜|연락/.test(q)) {
+    return `소통 담당자는 <b>최재주 책임</b>이에요.<br>📞 <a href="tel:010-8911-0424">010-8911-0424</a><br><span class="small">전체 스탭 명단은 [스탭·정보] 탭에서 확인하세요. (총 16명)</span>`;
+  }
+
+  // 경비/돈
+  if (/경비|돈|환전|얼마|달러|동$|비용/.test(q)) {
+    return `이번 출장 경비는 <b>6,335,000동 + 300달러</b>예요.<br><span class="small">경비 관련 문의는 최재주 책임(010-8911-0424)에게.</span>`;
+  }
+
+  // 비행기/항공
+  if (/비행|항공|편명|탑승|출국|귀국|복귀/.test(q)) {
+    return `✈️ <b>항공 일정</b><ul>
+      <li><b>출국</b> 6/10(수) 제주항공 7C2315 — 인천 17:20(KST) → 푸꾸옥 21:25(현지)</li>
+      <li><b>귀국</b> 6/13(토) 푸꾸옥 22:25(현지) 출발 → 6/14(일) 06:05 인천 입국수속</li></ul>
+      <span class="small">출국 집결: 6/10 13:00, 인천 T1 3층 L카운터(12번 게이트) 앞 · 귀국 공항이동: 6/13 20:00, 5–9호차 (염초희 대리·박지운 책임 동행)</span>`;
+  }
+
+  // 준비물
+  if (/준비|챙|짐|체크리스트|패킹|가져/.test(q)) {
+    const missing = PACK.filter(p => !packState(p.name, p.done));
+    let r = '';
+    if (missing.length) r += `🎒 <b>아직 안 챙긴 것 (${missing.length})</b><ul>` + missing.map(p => `<li>${p.name}${p.note ? ` <span class="small">(${p.note})</span>` : ''}</li>`).join('') + '</ul>';
+    else r += `🎒 준비물 <b>전부 챙김 완료</b>! 👍<br>`;
+    const t = current || next;
+    if (t && t.tips.length) r += `<span class="small">💡 ${t.title} 대비: ${t.tips.join(' · ')}</span>`;
+    return r + `<br><span class="small">전체 목록은 [준비물] 탭에서.</span>`;
+  }
+
+  // 어디
+  if (/어디|장소|위치|가야/.test(q)) {
+    if (current) return `지금은 <b>${current.title}</b> 시간이에요.<br>📍 <b>${current.loc || '장소 정보 없음'}</b>${next ? `<br><span class="small">다음 장소: ${next.loc || next.title} (${next.start})</span>` : ''}`;
+    if (next) return `다음으로 갈 곳은 📍 <b>${next.loc || next.title}</b><br>${evtLine(next, true)}${tipsLine(next)}`;
+    return '남은 일정이 없어요.';
+  }
+
+  // 특정 날짜
+  const dm = qRaw.match(/(\d{1,2})일/);
+  if (dm) {
+    const d = String(dm[1]).padStart(2, '0');
+    return listDay(`2026-06-${d}`, `6월 ${dm[1]}일`);
+  }
+  if (/오늘/.test(q)) {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+    return listDay(today, '오늘');
+  }
+  if (/내일/.test(q)) {
+    const t = new Date(Date.now() + 86400000);
+    const tomorrow = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(t);
+    return listDay(tomorrow, '내일');
+  }
+  if (/전체|모든일정|풀스케줄/.test(q)) {
+    return [...new Set(EVENTS.map(e => e.date))].map(d => listDay(d, fmtDay(d))).join('<br>');
+  }
+
+  // 다음 일정
+  if (/다음|이따|이후|그다음/.test(q)) {
+    if (!next) return '남은 일정이 없어요. 수고하셨습니다! 🎉';
+    return `다음 일정이에요.<br>${evtLine(next, true)}<br><span class="small">⏳ ${fmtDur(next.s - now)} 남음</span>${tipsLine(next)}`;
+  }
+
+  // 지금 뭐해 (기본)
+  if (/지금|뭐해|뭐하|할일|해야|현재|이제/.test(q)) {
+    let r = '';
+    if (current) {
+      r = `지금은 <b>${current.title}</b> 시간이에요.<br>${evtLine(current)}${tipsLine(current)}`;
+      if (next) r += `<br><span class="small">⏭ 다음: ${next.start} ${next.title} (${fmtDur(next.s - now)} 후)</span>`;
+    } else if (next) {
+      r = `지금은 비는 시간이에요. 다음 일정을 준비하세요.<br>${evtLine(next, true)}<br><span class="small">⏳ ${fmtDur(next.s - now)} 남음</span>${tipsLine(next)}`;
+    } else r = '모든 일정이 끝났어요! 🎉';
+    return r;
+  }
+
+  // 일정 키워드 검색 (토큰 단위, 조사 제거)
+  const STOP = ['언제', '어디', '일정', '시간', '몇시', '며칠', '정보', '알려줘', '알려', '해야', '가야', '하나요', '인가요'];
+  const tokens = qRaw.replace(/[?!.,~]/g, ' ').split(/\s+/)
+    .map(w => w.replace(/(은|는|이|가|을|를|의|에서|에는|으로|로|에)$/, ''))
+    .filter(w => w.length >= 2 && !STOP.includes(w));
+  if (tokens.length) {
+    const hits = EVENTS.filter(e => tokens.some(t => (e.title + (e.desc || '') + (e.loc || '')).includes(t)));
+    if (hits.length) return `"<b>${tokens.join(', ')}</b>" 관련 일정이에요.<ul>` + hits.map(e => `<li>${evtLine(e, true)}${tipsLine(e)}</li>`).join('') + '</ul>';
+  }
+
+  // 폴백
+  return `잘 모르겠어요 😅 이렇게 물어보세요:<br><span class="small">"지금 뭐 해?" · "다음 일정은?" · "12일 일정" · "뭘 챙겨야 해?" · "혼똔섬 언제?" · "최재주 연락처"</span>` +
+    (next ? `<br><br>참고로 다음 일정은:<br>${evtLine(next, true)}` : '');
+}
+
+function addMsg(html, who) {
+  const log = document.getElementById('chatlog');
+  const div = document.createElement('div');
+  div.className = 'msg ' + who;
+  div.innerHTML = html;
+  log.appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+function ask(text) {
+  const input = document.getElementById('q');
+  const t = (text || input.value).trim();
+  if (!t) return;
+  input.value = '';
+  addMsg(t.replace(/</g, '&lt;'), 'user');
+  setTimeout(() => addMsg(answer(t), 'bot'), 150);
+}
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+document.getElementById('chips').innerHTML = QUICKS.map(q => `<button onclick="ask('${q}')">${q}</button>`).join('');
+
+// ───────────────────────── 탭 ─────────────────────────
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('section').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  document.getElementById('tab-' + b.dataset.tab).classList.add('on');
+}));
+
+// ───────────────────────── 초기화 ─────────────────────────
+renderHero(); renderClock(); renderTimeline(); renderPack(); renderStaff();
+setInterval(() => { renderHero(); renderClock(); renderTimeline(); }, 30000);
+addMsg('안녕하세요! 푸꾸옥 촬영 일정 비서예요. 🌴<br>지금 뭘 해야 하는지, 어디로 가야 하는지, 뭘 챙겨야 하는지 물어보세요.', 'bot');
+</script>
+</body>
+</html>
