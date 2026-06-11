@@ -331,10 +331,15 @@ function fmtDur(ms) {
   if (m || !s) s += m + '분';
   return s.trim();
 }
+// 선택된 인물 — 일정 탭·히어로 카드·비서 응답 공통 기준
+let planWho = 'CHANS'; // 'CHANS' | 'RANI'
+function curEvents() { return planWho === 'RANI' ? EVENTS_RANI : EVENTS; }
+function whoLabel() { return planWho === 'RANI' ? '🎬 RANI (김란)' : '📸 Chans (강주찬)'; }
+
 function nowState() {
   const now = Date.now();
   let current = null, next = null, prev = null;
-  for (const e of EVENTS) {
+  for (const e of curEvents()) {
     if (now >= e.s && now < e.e) current = e;
     if (e.e <= now) prev = e;
     if (!next && e.s > now) next = e;
@@ -349,24 +354,26 @@ function evtTimeLabel(e) {
 function renderHero() {
   const { now, current, next } = nowState();
   const el = document.getElementById('hero');
+  const list = curEvents();
   let h = '';
-  if (now < EVENTS[0].s - 86400000 * 2) {
-    h = `<div class="label">출장 준비</div><div class="title">6/10(수) 13:00 인천공항 T1 집결</div>
+  if (now < list[0].s - 86400000 * 2) {
+    const meet = planWho === 'RANI' ? '13:00 인천공항 T2 집결' : '13:00 인천공항 T1 집결';
+    h = `<div class="label">출장 준비 · ${whoLabel()}</div><div class="title">6/10(수) ${meet}</div>
          <div class="meta">아직 출장 전이에요. 준비물 탭에서 짐을 챙겨두세요.</div>`;
   } else if (current) {
-    h = `<div class="label">▶ 지금 진행 중</div>
+    h = `<div class="label">▶ 지금 진행 중 · ${whoLabel()}</div>
          <div class="title">${current.title}</div>
          <div class="meta">🕐 ${evtTimeLabel(current)}${current.loc ? '\n📍 ' + current.loc : ''}${current.desc ? '\n' + current.desc : ''}</div>`;
     if (next) h += `<div class="count">다음 일정까지 ${fmtDur(next.s - now)} · ${next.start} ${next.title}</div>`;
     if (current.tips.length) h += `<div class="tips">💡 ${current.tips.join(' · ')}</div>`;
   } else if (next) {
-    h = `<div class="label">다음 일정</div>
+    h = `<div class="label">다음 일정 · ${whoLabel()}</div>
          <div class="title">${next.title}</div>
          <div class="meta">🕐 ${fmtDay(next.date)} ${evtTimeLabel(next)}${next.loc ? '\n📍 ' + next.loc : ''}${next.desc ? '\n' + next.desc : ''}</div>
          <div class="count">⏳ ${fmtDur(next.s - now)} 남음</div>`;
     if (next.tips.length) h += `<div class="tips">💡 ${next.tips.join(' · ')}</div>`;
   } else {
-    h = `<div class="label">일정 종료</div><div class="title">모든 일정이 끝났어요 🎉</div>
+    h = `<div class="label">일정 종료 · ${whoLabel()}</div><div class="title">모든 일정이 끝났어요 🎉</div>
          <div class="meta">푸꾸옥 촬영 수고 많으셨습니다!</div>`;
   }
   el.innerHTML = h;
@@ -379,10 +386,9 @@ function renderClock() {
 }
 
 // ───────────────────────── 일정 타임라인 ─────────────────────────
-let planWho = 'CHANS'; // 'CHANS' | 'RANI'
 function renderTimeline() {
   const { now } = nowState();
-  const list = planWho === 'RANI' ? EVENTS_RANI : EVENTS;
+  const list = curEvents();
   let h = '', lastDate = '';
   for (const e of list) {
     if (e.date !== lastDate) {
@@ -443,7 +449,7 @@ function evtLine(e, withDay) {
 }
 function tipsLine(e) { return e.tips.length ? `<br><span class="small">💡 ${e.tips.join(' · ')}</span>` : ''; }
 
-function dayEvents(dateStr, list = EVENTS) { return list.filter(e => e.date === dateStr); }
+function dayEvents(dateStr, list = curEvents()) { return list.filter(e => e.date === dateStr); }
 function listDay(dateStr, label) {
   const evs = dayEvents(dateStr);
   if (!evs.length) return `${label}에는 등록된 일정이 없어요.`;
@@ -487,7 +493,13 @@ function answer(qRaw) {
 
   // 비행기/항공
   if (/비행|항공|편명|탑승|출국|귀국|복귀/.test(q)) {
-    return `✈️ <b>항공 일정</b><ul>
+    if (planWho === 'RANI') {
+      return `✈️ <b>항공 일정 · 🎬 RANI (김란)</b><ul>
+        <li><b>출국</b> 6/10(수) 대한항공 KE485 — 인천 T2 19:05(KST) → 푸꾸옥 22:50(현지)</li>
+        <li><b>귀국</b> 6/13(토) 19:00 선발대 공항 이동(스탭밴1) — ⚠ 귀국 항공편 확인 필요</li></ul>
+        <span class="small">출국 집결: 6/10 13:00, 인천 T2 3층 E카운터(5번 게이트) 앞</span>`;
+    }
+    return `✈️ <b>항공 일정 · 📸 Chans (강주찬)</b><ul>
       <li><b>출국</b> 6/10(수) 제주항공 7C2315 — 인천 17:20(KST) → 푸꾸옥 21:25(현지)</li>
       <li><b>귀국</b> 6/13(토) 푸꾸옥 22:25(현지) 출발 → 6/14(일) 06:05 인천 입국수속</li></ul>
       <span class="small">출국 집결: 6/10 13:00, 인천 T1 3층 L카운터(12번 게이트) 앞 · 귀국 공항이동: 6/13 20:00, 5–9호차 (염초희 대리·박지운 책임 동행)</span>`;
@@ -495,9 +507,9 @@ function answer(qRaw) {
 
   // 촬영일지
   if (/촬영일지|일지|후기|뭐찍|뭘찍|찍었|기록/.test(q)) {
-    const logged = EVENTS.filter(e => e.log);
-    if (!logged.length) return '아직 작성된 촬영일지가 없어요. 촬영 후 Notion에 기록하면 여기에 반영돼요.';
-    return `📝 <b>촬영일지</b> (${logged.length}건)<ul>` +
+    const logged = curEvents().filter(e => e.log);
+    if (!logged.length) return `${whoLabel()} 기준으로 아직 작성된 촬영일지가 없어요. 촬영 후 Notion에 기록하면 여기에 반영돼요.`;
+    return `📝 <b>촬영일지 · ${whoLabel()}</b> (${logged.length}건)<ul>` +
       logged.map(e => `<li>${evtLine(e, true)}</li>`).join('') + '</ul>';
   }
 
@@ -535,7 +547,7 @@ function answer(qRaw) {
     return listDay(tomorrow, '내일');
   }
   if (/전체|모든일정|풀스케줄/.test(q)) {
-    return [...new Set(EVENTS.map(e => e.date))].map(d => listDay(d, fmtDay(d))).join('<br>');
+    return [...new Set(curEvents().map(e => e.date))].map(d => listDay(d, fmtDay(d))).join('<br>');
   }
 
   // 다음 일정
@@ -562,7 +574,7 @@ function answer(qRaw) {
     .map(w => w.replace(/(은|는|이|가|을|를|의|에서|에는|으로|로|에)$/, ''))
     .filter(w => w.length >= 2 && !STOP.includes(w));
   if (tokens.length) {
-    const hits = EVENTS.filter(e => tokens.some(t => (e.title + (e.desc || '') + (e.loc || '') + (e.log || '')).includes(t)));
+    const hits = curEvents().filter(e => tokens.some(t => (e.title + (e.desc || '') + (e.loc || '') + (e.log || '')).includes(t)));
     if (hits.length) return `"<b>${tokens.join(', ')}</b>" 관련 일정이에요.<ul>` + hits.map(e => `<li>${evtLine(e, true)}${tipsLine(e)}</li>`).join('') + '</ul>';
   }
 
@@ -594,8 +606,10 @@ document.getElementById('chips').innerHTML = QUICKS.map(q => `<button onclick="a
 document.querySelectorAll('#whotabs button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#whotabs button').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
+  const changed = planWho !== b.dataset.who;
   planWho = b.dataset.who;
-  renderTimeline();
+  renderHero(); renderTimeline();
+  if (changed) addMsg(`🔄 이제 <b>${whoLabel()}</b> 일정 기준으로 안내해요.`, 'bot');
 }));
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('nav button').forEach(x => x.classList.remove('on'));
