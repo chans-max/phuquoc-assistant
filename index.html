@@ -72,6 +72,10 @@
     padding: 0 18px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
 
   /* timeline */
+  .subtabs { display: flex; gap: 6px; margin: 2px 0 4px; }
+  .subtabs button { flex: 1; background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 10px 0; font-size: 13.5px; font-weight: 700; color: var(--sub); cursor: pointer; font-family: inherit; }
+  .subtabs button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
   .dayhead { font-size: 14px; font-weight: 800; margin: 18px 2px 8px; display: flex; justify-content: space-between; align-items: baseline; }
   .dayhead .tz { font-size: 11px; font-weight: 600; color: var(--sub); }
   .evt { display: flex; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px;
@@ -130,7 +134,13 @@
   </div>
 </section>
 
-<section id="tab-plan"><div id="timeline"></div></section>
+<section id="tab-plan">
+  <div class="subtabs" id="whotabs">
+    <button class="on" data-who="CHANS">📸 Chans (강주찬)</button>
+    <button data-who="RANI">🎬 RANI (김란)</button>
+  </div>
+  <div id="timeline"></div>
+</section>
 
 <section id="tab-pack">
   <div id="packsum"></div>
@@ -147,7 +157,7 @@
     <div class="info-row"><span class="k">소통 담당</span><span class="v">최재주 책임 <a href="tel:010-8911-0424" style="color:var(--accent)">010-8911-0424</a></span></div>
     <div class="info-row"><span class="k">출국 미팅포인트</span><span class="v">인천 T1 3층 L카운터<br>(12번 게이트) 앞</span></div>
   </div>
-  <p class="src">데이터 출처: <a href="https://app.notion.com/p/culturalcontents/e0f2104f3d584859b34bc0517ffe81e3" target="_blank">Notion 일정표 원본 보기 ↗</a><br>2026-06-11 동기화 · 일정 변경 시 Notion 확인</p>
+  <p class="src">데이터 출처: <a href="https://app.notion.com/p/culturalcontents/e0f2104f3d584859b34bc0517ffe81e3" target="_blank">Chans 일정 ↗</a> · <a href="https://app.notion.com/p/culturalcontents/3799e8ba205180ffaa90fe8abae83472" target="_blank">RANI 일정 ↗</a><br>2026-06-11 동기화 (1시간 주기 자동) · 일정 변경 시 Notion 확인</p>
 </section>
 
 <nav>
@@ -214,6 +224,45 @@ const EVENTS = [
     desc:'인천공항 도착(한국시간)', loc:'인천공항', tips:['수고하셨습니다! 🎉'] },
 ];
 
+// RANI(김란 감독) 일정 — 행사장·공연 담당 (Notion: RANI 푸꾸옥 촬영 일정)
+const EVENTS_RANI = [
+  { date:'2026-06-10', start:'13:00', end:'19:05', tz:'KR', title:'인천공항 도착/미팅포인트 확인 및 진에어촬영',
+    desc:'2터미널 도착·촬영 점검', loc:'인천공항 T2 3층 E카운터(5번 게이트) 앞', tips:[] },
+  { date:'2026-06-10', start:'19:05', end:'22:50', endTz:'VN', tz:'KR', title:'대한항공 KE485 (인천→푸꾸옥)',
+    desc:'COO, OBK대표이사, OBK본부장, 최두영 이사, MC 이대현, OP 장진호 동행', loc:'기내', tips:[] },
+  { date:'2026-06-10', start:'22:50', end:'23:50', tz:'VN', title:'푸꾸옥 도착 후 공항 스케치, 호텔 이동/체크인 스케치',
+    desc:'도착 스케치 점검 후 미팅포인트 합류, 호텔 체크인 스케치 촬영', loc:'푸꾸옥 공항 → 호텔', tips:[] },
+
+  { date:'2026-06-11', start:'07:00', tz:'VN', title:'스탭 조식', desc:'', loc:'호텔 조식당', tips:[] },
+  { date:'2026-06-11', start:'08:00', tz:'VN', title:'OBK브랜드데이 선발대 호텔 출발 (오션 객실동)',
+    desc:'VAN1 / 선발대 동행·이동 스케치', loc:'호텔 오션 객실동 앞', tips:[] },
+  { date:'2026-06-11', start:'09:00', tz:'VN', title:'선시그니처갤러리 행사장 점검/동선 스케치',
+    desc:'행사장 전체 스케치 동선 점검(설정샷), OBK 리허설', loc:'선시그니처갤러리', tips:[] },
+  { date:'2026-06-11', start:'16:20', tz:'VN', title:'OBK 팀빌딩 본 촬영',
+    desc:'팀빌딩 시작 장면, 볼룸 반경·3층→1층 출구, 환호 슬로모', loc:'선시그니처갤러리', tips:[] },
+  { date:'2026-06-11', start:'20:30', end:'21:30', tz:'VN', title:'키스오브더씨쇼 공연장 스케치',
+    desc:'입장 20:30–21:00, 공연 21:00–21:30 · 감정 피크 포인트', loc:'선셋타운', tips:[] },
+  { date:'2026-06-11', start:'22:00', tz:'VN', title:'호텔 복귀', desc:'', loc:'호텔', tips:[] },
+
+  { date:'2026-06-12', start:'08:00', tz:'VN', title:'bhc브랜드데이 선발대 호텔 출발',
+    desc:'스탭밴1 / 선발대 동행', loc:'호텔', tips:[] },
+  { date:'2026-06-12', start:'09:20', tz:'VN', title:'선시그니처갤러리 행사장 점검/스케치',
+    desc:'bhc 리허설 · 행사장 전체 스케치 동선 점검', loc:'선시그니처갤러리', tips:[] },
+  { date:'2026-06-12', start:'16:20', tz:'VN', title:'bhc 팀빌딩 본 촬영',
+    desc:'강주찬 감독 합류 · 팀빌딩 시작 장면, 볼룸 반경·3층→1층 출구', loc:'선시그니처갤러리', tips:[] },
+  { date:'2026-06-12', start:'20:30', end:'21:30', tz:'VN', title:'키스오브더씨쇼 공연장 스케치',
+    desc:'입장 20:30–21:00, 공연 21:00–21:30', loc:'선셋타운', tips:[] },
+  { date:'2026-06-12', start:'22:00', tz:'VN', title:'버스 승차장소 스케치 후 호텔 복귀', desc:'', loc:'호텔', tips:[] },
+
+  { date:'2026-06-13', start:'11:40', tz:'VN', title:'호텔 오션동 체크아웃 촬영', desc:'', loc:'호텔 오션동', tips:[] },
+  { date:'2026-06-13', start:'12:00', end:'13:00', tz:'VN', title:'체크아웃 후 중식 (7호차)', desc:'', loc:'7호차', tips:[] },
+  { date:'2026-06-13', start:'14:30', end:'16:00', tz:'VN', title:'호국사 대기/촬영',
+    desc:'오션뷰 사찰·소원끈·커피차·브랜딩 의자 스케치', loc:'호국사', tips:[] },
+  { date:'2026-06-13', start:'16:00', tz:'VN', title:'한국관 이동 스케치 촬영', desc:'', loc:'한국관', tips:[] },
+  { date:'2026-06-13', start:'19:00', tz:'VN', title:'선발대 공항 이동/공항 스케치·출국 촬영',
+    desc:'스탭밴1 · 귀국 항공편 확인 필요', loc:'푸꾸옥 공항', tips:[] },
+];
+
 const STAFF = [
   { name:'김재영', role:'대표' }, { name:'최두영', role:'이사' },
   { name:'손광현', role:'팀장' }, { name:'구본혁', role:'팀장' },
@@ -256,14 +305,17 @@ function toEpoch(dateStr, timeStr, tz) {
   return Date.UTC(y, m - 1, d, hh, mm) - TZOFF[tz] * 60000;
 }
 // 각 일정의 시작/종료 epoch 계산. 종료 미지정 시 같은 날 다음 일정 시작 or +2.5h
-EVENTS.forEach((e, i) => {
-  e.s = toEpoch(e.date, e.start, e.tz);
-  if (e.end) e.e = toEpoch(e.date, e.end, e.endTz || e.tz);
-  else {
-    const nxt = EVENTS[i + 1];
-    e.e = (nxt && nxt.date === e.date) ? toEpoch(nxt.date, nxt.start, nxt.tz) : e.s + 150 * 60000;
-  }
-});
+function prepEvents(list) {
+  list.forEach((e, i) => {
+    e.s = toEpoch(e.date, e.start, e.tz);
+    if (e.end) e.e = toEpoch(e.date, e.end, e.endTz || e.tz);
+    else {
+      const nxt = list[i + 1];
+      e.e = (nxt && nxt.date === e.date) ? toEpoch(nxt.date, nxt.start, nxt.tz) : e.s + 150 * 60000;
+    }
+  });
+}
+prepEvents(EVENTS); prepEvents(EVENTS_RANI);
 
 const DAYNAMES = ['일','월','화','수','목','금','토'];
 function fmtDay(dateStr) {
@@ -327,13 +379,15 @@ function renderClock() {
 }
 
 // ───────────────────────── 일정 타임라인 ─────────────────────────
+let planWho = 'CHANS'; // 'CHANS' | 'RANI'
 function renderTimeline() {
   const { now } = nowState();
+  const list = planWho === 'RANI' ? EVENTS_RANI : EVENTS;
   let h = '', lastDate = '';
-  for (const e of EVENTS) {
+  for (const e of list) {
     if (e.date !== lastDate) {
       lastDate = e.date;
-      const tzs = new Set(dayEvents(e.date).map(x => x.tz));
+      const tzs = new Set(dayEvents(e.date, list).map(x => x.tz));
       const tzLabel = tzs.size > 1 ? '🇰🇷→🇻🇳 시차 주의 (현지 -2시간)' : (e.tz === 'KR' ? '🇰🇷 한국시간' : '🇻🇳 현지시간');
       h += `<div class="dayhead">${fmtDay(e.date)}<span class="tz">${tzLabel}</span></div>`;
     }
@@ -382,14 +436,14 @@ function renderStaff() {
 }
 
 // ───────────────────────── 비서 Q&A ─────────────────────────
-const QUICKS = ['지금 뭐 해야 해?', '다음 일정은?', '오늘 일정', '어디로 가야 해?', '촬영일지', '뭘 챙겨야 해?', '담당자 연락처', '경비 얼마?', '비행기 정보'];
+const QUICKS = ['지금 뭐 해야 해?', '다음 일정은?', '오늘 일정', '김란 감독 일정', '어디로 가야 해?', '촬영일지', '뭘 챙겨야 해?', '담당자 연락처', '경비 얼마?', '비행기 정보'];
 
 function evtLine(e, withDay) {
   return `<b>${withDay ? fmtDay(e.date) + ' ' : ''}${evtTimeLabel(e)}</b> ${e.title}${e.loc ? `<br><span class="small">📍 ${e.loc}</span>` : ''}${e.desc ? `<br><span class="small">${e.desc}</span>` : ''}${e.log ? `<br><span class="small">📝 ${e.log}</span>` : ''}`;
 }
 function tipsLine(e) { return e.tips.length ? `<br><span class="small">💡 ${e.tips.join(' · ')}</span>` : ''; }
 
-function dayEvents(dateStr) { return EVENTS.filter(e => e.date === dateStr); }
+function dayEvents(dateStr, list = EVENTS) { return list.filter(e => e.date === dateStr); }
 function listDay(dateStr, label) {
   const evs = dayEvents(dateStr);
   if (!evs.length) return `${label}에는 등록된 일정이 없어요.`;
@@ -403,6 +457,17 @@ function listDay(dateStr, label) {
 function answer(qRaw) {
   const q = qRaw.toLowerCase().replace(/\s+/g, '');
   const { now, current, next } = nowState();
+
+  // 김란 감독(RANI) 일정
+  if (/김란|라니|rani/i.test(qRaw)) {
+    const rNow = EVENTS_RANI.find(e => now >= e.s && now < e.e);
+    const rNext = EVENTS_RANI.find(e => e.s > now);
+    let r = `🎬 <b>김란 감독 (RANI)</b> — 행사장·공연 담당<br>`;
+    if (rNow) r += `▶ 지금: ${evtLine(rNow)}<br>`;
+    if (rNext) r += `⏭ 다음: ${evtLine(rNext, true)}<br>`;
+    if (!rNow && !rNext) r += `남은 일정이 없어요.<br>`;
+    return r + `<span class="small">전체 일정은 [일정] 탭 → RANI에서 확인하세요.</span>`;
+  }
 
   // 스탭 이름 직접 검색
   const person = STAFF.find(p => q.includes(p.name));
@@ -526,6 +591,12 @@ document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'E
 document.getElementById('chips').innerHTML = QUICKS.map(q => `<button onclick="ask('${q}')">${q}</button>`).join('');
 
 // ───────────────────────── 탭 ─────────────────────────
+document.querySelectorAll('#whotabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#whotabs button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  planWho = b.dataset.who;
+  renderTimeline();
+}));
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('nav button').forEach(x => x.classList.remove('on'));
   document.querySelectorAll('section').forEach(x => x.classList.remove('on'));
