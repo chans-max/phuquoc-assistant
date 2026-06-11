@@ -104,6 +104,23 @@
   .info-row .v { font-weight: 700; text-align: right; }
   .src { font-size: 12px; color: var(--sub); text-align: center; margin-top: 14px; }
   .src a { color: var(--accent); }
+
+  /* budget */
+  .bsums { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .bsum { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .bsum .lbl { font-size: 12px; color: var(--sub); font-weight: 600; margin-bottom: 4px; }
+  .bsum .val { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+  .bsum .val2 { font-size: 13px; color: var(--sub); margin-top: 2px; }
+  .bsum.total .val { color: var(--accent); }
+  .bsum.remain .val { color: var(--good); }
+  .bsum.spent .val { color: var(--warn); }
+  .bitem { display: flex; justify-content: space-between; align-items: center; background: var(--card);
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 6px; }
+  .bitem .bn { font-size: 14px; font-weight: 700; }
+  .bitem .ba { font-size: 14px; font-weight: 700; }
+  .bitem .ba.out { color: var(--warn); }
+  .bitem .ba.in { color: var(--good); }
+  .bsec { font-size: 13px; font-weight: 800; color: var(--sub); margin: 14px 2px 8px; }
 </style>
 </head>
 <body>
@@ -132,6 +149,10 @@
   <div id="timeline"></div>
 </section>
 
+<section id="tab-budget">
+  <div id="budget"></div>
+</section>
+
 <section id="tab-staff">
   <div id="staff"></div>
   <div class="card" style="margin-top:14px">
@@ -148,6 +169,7 @@
 <nav>
   <button class="on" data-tab="ask"><span class="ico">💬</span>비서</button>
   <button data-tab="plan"><span class="ico">🗓️</span>일정</button>
+  <button data-tab="budget"><span class="ico">💰</span>경비</button>
   <button data-tab="staff"><span class="ico">👥</span>스탭·정보</button>
 </nav>
 
@@ -259,6 +281,15 @@ const STAFF = [
   { name:'김채린', role:'매니저' }, { name:'박정현', role:'매니저' },
   { name:'이대현', role:'MC' }, { name:'장진호', role:'OP' },
 ];
+
+// 경비 데이터 (Notion: 경비 DB, 동기화 2026-06-11)
+const BUDGET = {
+  totalVND: 6335000,
+  totalUSD: 300,
+  items: [
+    { name: '혼똔섬 점심', vnd: 220000, usd: 0, type: '지출' },
+  ]
+};
 
 // ───────────────────────── 시간 유틸 ─────────────────────────
 const TZOFF = { KR: 9 * 60, VN: 7 * 60 }; // 분 단위 UTC 오프셋 (둘 다 DST 없음)
@@ -380,6 +411,55 @@ function renderStaff() {
     </div>`).join('');
 }
 
+// ───────────────────────── 경비 ─────────────────────────
+function renderBudget() {
+  const fmt = n => n.toLocaleString('ko-KR');
+  const expenses = BUDGET.items.filter(x => x.type === '지출');
+  const income   = BUDGET.items.filter(x => x.type === '수입');
+  const spentVND = expenses.reduce((s, x) => s + (x.vnd || 0), 0);
+  const spentUSD = expenses.reduce((s, x) => s + (x.usd || 0), 0);
+  const remVND   = BUDGET.totalVND - spentVND;
+  const remUSD   = BUDGET.totalUSD - spentUSD;
+
+  let h = `<div class="bsums">
+    <div class="bsum total">
+      <div class="lbl">💼 총 경비</div>
+      <div class="val">${fmt(BUDGET.totalVND)}동</div>
+      <div class="val2">$${fmt(BUDGET.totalUSD)}</div>
+    </div>
+    <div class="bsum spent">
+      <div class="lbl">💸 지출비용</div>
+      <div class="val">${fmt(spentVND)}동</div>
+      ${spentUSD > 0 ? `<div class="val2">$${fmt(spentUSD)}</div>` : ''}
+    </div>
+    <div class="bsum remain" style="grid-column:span 2">
+      <div class="lbl">✅ 남은 금액</div>
+      <div class="val">${fmt(remVND)}동${remUSD > 0 ? ` + $${fmt(remUSD)}` : ''}</div>
+    </div>
+  </div>`;
+
+  h += `<div class="bsec">지출내역 (${expenses.length}건)</div>`;
+  if (expenses.length) {
+    h += expenses.map(item => {
+      const amt = [item.vnd ? `-${fmt(item.vnd)}동` : '', item.usd ? `-$${fmt(item.usd)}` : ''].filter(Boolean).join(' / ');
+      return `<div class="bitem"><span class="bn">${item.name}</span><span class="ba out">${amt}</span></div>`;
+    }).join('');
+  } else {
+    h += `<div class="bitem"><span class="bn" style="color:var(--sub)">아직 지출내역이 없어요</span></div>`;
+  }
+
+  if (income.length) {
+    h += `<div class="bsec">수입내역 (${income.length}건)</div>`;
+    h += income.map(item => {
+      const amt = [item.vnd ? `+${fmt(item.vnd)}동` : '', item.usd ? `+$${fmt(item.usd)}` : ''].filter(Boolean).join(' / ');
+      return `<div class="bitem"><span class="bn">${item.name}</span><span class="ba in">${amt}</span></div>`;
+    }).join('');
+  }
+
+  h += `<p class="src">데이터 출처: <a href="https://app.notion.com/p/37c9e8ba205180b9b685c068db8f7464" target="_blank">경비 DB ↗</a><br>Notion에 지출 추가 후 동기화하면 반영돼요</p>`;
+  document.getElementById('budget').innerHTML = h;
+}
+
 // ───────────────────────── 비서 Q&A ─────────────────────────
 const QUICKS = ['지금 뭐 해야 해?', '다음 일정은?', '오늘 일정', '김란 감독 일정', '어디로 가야 해?', '촬영일지', '담당자 연락처', '경비 얼마?', '비행기 정보'];
 
@@ -427,7 +507,12 @@ function answer(qRaw) {
 
   // 경비/돈
   if (/경비|돈|환전|얼마|달러|동$|비용/.test(q)) {
-    return `이번 출장 경비는 <b>6,335,000동 + 300달러</b>예요.<br><span class="small">경비 관련 문의는 최재주 책임(010-8911-0424)에게.</span>`;
+    const fmt = n => n.toLocaleString('ko-KR');
+    const spentVND = BUDGET.items.filter(x => x.type === '지출').reduce((s, x) => s + (x.vnd || 0), 0);
+    const spentUSD = BUDGET.items.filter(x => x.type === '지출').reduce((s, x) => s + (x.usd || 0), 0);
+    const remVND = BUDGET.totalVND - spentVND;
+    const remUSD = BUDGET.totalUSD - spentUSD;
+    return `💰 <b>경비 현황</b><br>총 경비: <b>${fmt(BUDGET.totalVND)}동 + $${fmt(BUDGET.totalUSD)}</b><br>지출: <b>${fmt(spentVND)}동${spentUSD > 0 ? ` + $${fmt(spentUSD)}` : ''}</b><br>남은 금액: <b>${fmt(remVND)}동${remUSD > 0 ? ` + $${fmt(remUSD)}` : ''}</b><br><span class="small">자세한 내역은 [💰경비] 탭에서 확인하세요.</span>`;
   }
 
   // 비행기/항공
@@ -547,7 +632,7 @@ document.querySelectorAll('nav button').forEach(b => b.addEventListener('click',
 }));
 
 // ───────────────────────── 초기화 ─────────────────────────
-renderHero(); renderClock(); renderTimeline(); renderStaff();
+renderHero(); renderClock(); renderTimeline(); renderStaff(); renderBudget();
 setInterval(() => { renderHero(); renderClock(); renderTimeline(); }, 30000);
 addMsg('안녕하세요! 푸꾸옥 촬영 일정 비서예요. 🌴<br>지금 뭘 해야 하는지, 어디로 가야 하는지, 다음 일정이 뭔지 물어보세요.', 'bot');
 </script>
