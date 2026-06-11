@@ -137,12 +137,17 @@
   .bitem .ba.in { color: var(--good); }
   .bsec { font-size: 13px; font-weight: 800; color: var(--sub); margin: 14px 2px 8px; }
 
-  /* notion link button */
-  .notion-btn { display: block; text-align: center; margin: 16px 0 4px;
-    background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
-    padding: 12px; font-size: 13.5px; font-weight: 700; color: var(--accent);
-    text-decoration: none; }
-  .notion-btn:active { opacity: 0.7; }
+  /* swipe-to-edit */
+  .evt-wrap { position: relative; margin-bottom: 8px; border-radius: 14px; overflow: hidden; }
+  .evt-wrap .evt { margin-bottom: 0; border-radius: 14px; position: relative; z-index: 1;
+    transition: transform 0.22s cubic-bezier(.4,0,.2,1); will-change: transform; }
+  .evt-wrap.swiped .evt { transform: translateX(-76px); }
+  .swipe-edit { position: absolute; right: 0; top: 0; bottom: 0; width: 76px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); border-radius: 0 14px 14px 0; }
+  .swipe-edit a { color: #fff; font-size: 13px; font-weight: 700; text-decoration: none;
+    padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .swipe-edit a span { font-size: 16px; }
 </style>
 </head>
 <body>
@@ -170,7 +175,6 @@
     <button data-who="RANI">🎬 RANI (김란)</button>
   </div>
   <div id="timeline"></div>
-  <div id="plan-src"></div>
 </section>
 
 <section id="tab-budget">
@@ -322,9 +326,54 @@ function toEpoch(dateStr, timeStr, tz) {
   const [hh, mm] = timeStr.split(':').map(Number);
   return Date.UTC(y, m - 1, d, hh, mm) - TZOFF[tz] * 60000;
 }
+// Notion 페이지 ID (순서는 EVENTS / EVENTS_RANI 배열 순서와 동일)
+const CHANS_NIDS = [
+  '2b8b97f2048b43d6a7fc746c7b85212a', // 인천공항
+  'cc5ab6210eb84adeb39822aed9c99d29', // 제주항공 7C2315
+  '756fb15b43b4470b8fb37d9f842b333c', // 푸꾸옥 도착
+  '890005245f07468f86edd610569670e9', // 스탭 조식 6/11
+  '3799e8ba2051800c9c8ceeb062ca37f1', // OBK 선발대
+  'a358fee17cef450a8c83bfe67cca3578', // 혼똔섬 하차
+  'fce3d7a37d72456ebb3a727a50cb3c36', // 혼똔섬 투어/내부
+  '7ae5d41458e44a39bc122846b0eeb11a', // 그랜드월드 껌냐
+  '7c95938ceadd469aa9c6cb3306e0a090', // 월드컵 경기
+  '8de0189250974ec0b6ef70a3c9ce7623', // 호텔 오션동+빈원더스
+  '37b9e8ba205180529894e40b114bc64b', // 선시그니처갤러리 스케치
+  'cb87173d20f945429ee288223eb4de5b', // 그랜드월드 소나시야
+  '42f031a504e748e89754829ba8f17012', // 코랄동 체크아웃
+  'f18edc6efaf247619be8ae3ca76c3761', // 1~6호차 중식
+  '01547e4d0cc34382a1a849ea9d7dacd9', // 오메가SPA
+  'b7aaa8ecca1048d5a74b57411eb6e839', // 한국관
+  '5dbe77e560cc4d70b13419a5eaee7556', // 공항 이동
+  'a660118743d9415dbd620785db249d1b', // 제주항공 출발
+  'd71785758eb24fe19e08fd3e58462981', // 입국수속
+];
+const RANI_NIDS = [
+  '3799e8ba205180a29fd2d7bcb3ebe595', // 인천공항 진에어
+  '3799e8ba205180af96aef870ed03ad7e', // 대한항공 KE485
+  '37c9e8ba205181869ff3eb2ce2b71526', // 푸꾸옥 도착
+  '37c9e8ba2051818e95cbe82466933eec', // 스탭 조식 6/11
+  '37c9e8ba205181c28e94ce55d7477219', // OBK 선발대
+  '37c9e8ba20518124a477de9006a94da6', // 선시그니처 점검/동선
+  '37c9e8ba2051818a87aed69f056a2d1a', // OBK 팀빌딩
+  '37c9e8ba205181ec840af486d9b3451d', // 키스오브더씨쇼 6/11
+  '37c9e8ba205181829433ec00230b7ad5', // 호텔 복귀 6/11
+  '37c9e8ba20518161a6c5df5b36b71958', // bhc 선발대
+  '37c9e8ba2051811c9268f8a379893233', // 선시그니처 점검/스케치 6/12
+  '37c9e8ba205181fcad0df5d5a1f31f58', // bhc 팀빌딩
+  '37c9e8ba2051818d9f4dd7cee6bc68cb', // 키스오브더씨쇼 6/12
+  '37c9e8ba2051819e97d5dec7579d689a', // 버스+호텔 복귀
+  '37c9e8ba20518166a0abc89d169f30fc', // 오션동 체크아웃
+  '37c9e8ba205181b892c2c8da674ded3a', // 중식 7호차
+  '37c9e8ba205181bda96adde0b454ff36', // 호국사
+  '37c9e8ba205181dd981be9885aa767b3', // 한국관
+  '37c9e8ba2051818ebc0ecf6f2a5eb962', // 선발대 공항 이동
+];
+
 // 각 일정의 시작/종료 epoch 계산. 종료 미지정 시 같은 날 다음 일정 시작 or +2.5h
-function prepEvents(list) {
+function prepEvents(list, nids) {
   list.forEach((e, i) => {
+    if (nids) e.nid = nids[i];
     e.s = toEpoch(e.date, e.start, e.tz);
     if (e.end) e.e = toEpoch(e.date, e.end, e.endTz || e.tz);
     else {
@@ -333,7 +382,7 @@ function prepEvents(list) {
     }
   });
 }
-prepEvents(EVENTS); prepEvents(EVENTS_RANI);
+prepEvents(EVENTS, CHANS_NIDS); prepEvents(EVENTS_RANI, RANI_NIDS);
 
 const DAYNAMES = ['일','월','화','수','목','금','토'];
 function fmtDay(dateStr) {
@@ -416,18 +465,63 @@ function renderTimeline() {
       h += `<div class="dayhead">${fmtDay(e.date)}<span class="tz">${tzLabel}</span></div>`;
     }
     const cls = now >= e.e ? 'done' : (now >= e.s ? 'now' : '');
-    h += `<div class="evt ${cls}">
-      <div class="t">${evtTimeLabel(e)}</div>
-      <div class="body"><div class="n">${e.title}${cls === 'now' ? '<span class="badge">NOW</span>' : ''}</div>
-      ${e.desc ? `<div class="d">${e.desc}</div>` : ''}
-      ${e.log ? `<div class="log">📝 ${e.log}</div>` : ''}</div></div>`;
+    const notionUrl = e.nid ? `https://app.notion.com/p/${e.nid}` : '#';
+    h += `<div class="evt-wrap">
+      <div class="swipe-edit"><a href="${notionUrl}" target="_blank"><span>✏️</span>수정</a></div>
+      <div class="evt ${cls}">
+        <div class="t">${evtTimeLabel(e)}</div>
+        <div class="body"><div class="n">${e.title}${cls === 'now' ? '<span class="badge">NOW</span>' : ''}</div>
+        ${e.desc ? `<div class="d">${e.desc}</div>` : ''}
+        ${e.log ? `<div class="log">📝 ${e.log}</div>` : ''}</div>
+      </div>
+    </div>`;
   }
   document.getElementById('timeline').innerHTML = h;
-  const notionUrl = planWho === 'RANI'
-    ? 'https://app.notion.com/p/3799e8ba205180ffaa90fe8abae83472'
-    : 'https://app.notion.com/p/e0f2104f3d584859b34bc0517ffe81e3';
-  document.getElementById('plan-src').innerHTML =
-    `<a href="${notionUrl}" target="_blank" class="notion-btn">📝 노션에서 일정 수정하기 ↗</a>`;
+}
+
+// ───────────────────────── 스와이프 수정 ─────────────────────────
+function bindSwipe() {
+  const tl = document.getElementById('timeline');
+  let startX = 0, startY = 0, target = null, dirLocked = false, isHoriz = false;
+
+  tl.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    target = e.target.closest('.evt-wrap');
+    dirLocked = false; isHoriz = false;
+  }, { passive: true });
+
+  tl.addEventListener('touchmove', e => {
+    if (!target) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!dirLocked) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      dirLocked = true;
+      isHoriz = Math.abs(dx) > Math.abs(dy);
+    }
+    if (isHoriz) e.preventDefault();
+  }, { passive: false });
+
+  tl.addEventListener('touchend', e => {
+    if (!target || !dirLocked || !isHoriz) { target = null; return; }
+    const dx = e.changedTouches[0].clientX - startX;
+    if (dx < -44) {
+      // 다른 열린 것 닫기
+      tl.querySelectorAll('.evt-wrap.swiped').forEach(w => { if (w !== target) w.classList.remove('swiped'); });
+      target.classList.add('swiped');
+    } else if (dx > 20) {
+      target.classList.remove('swiped');
+    }
+    target = null;
+  }, { passive: true });
+
+  // 타임라인 바깥 터치 시 닫기
+  document.addEventListener('touchstart', e => {
+    if (!e.target.closest('#timeline')) {
+      tl.querySelectorAll('.evt-wrap.swiped').forEach(w => w.classList.remove('swiped'));
+    }
+  }, { passive: true });
 }
 
 // ───────────────────────── 스탭 ─────────────────────────
@@ -661,7 +755,7 @@ document.querySelectorAll('nav button').forEach(b => b.addEventListener('click',
 }));
 
 // ───────────────────────── 초기화 ─────────────────────────
-renderHero(); renderClock(); renderTimeline(); renderStaff(); renderBudget();
+renderHero(); renderClock(); renderTimeline(); renderStaff(); renderBudget(); bindSwipe();
 setInterval(() => { renderHero(); renderClock(); renderTimeline(); }, 10000);
 
 // 모바일 백그라운드 후 복귀 시 즉시 갱신 (iOS PWA / 안드로이드 크롬 throttle 대응)
