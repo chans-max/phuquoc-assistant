@@ -136,6 +136,13 @@
   .bitem .ba.out { color: var(--warn); }
   .bitem .ba.in { color: var(--good); }
   .bsec { font-size: 13px; font-weight: 800; color: var(--sub); margin: 14px 2px 8px; }
+
+  /* notion link button */
+  .notion-btn { display: block; text-align: center; margin: 16px 0 4px;
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 12px; font-size: 13.5px; font-weight: 700; color: var(--accent);
+    text-decoration: none; }
+  .notion-btn:active { opacity: 0.7; }
 </style>
 </head>
 <body>
@@ -163,6 +170,7 @@
     <button data-who="RANI">🎬 RANI (김란)</button>
   </div>
   <div id="timeline"></div>
+  <div id="plan-src"></div>
 </section>
 
 <section id="tab-budget">
@@ -415,6 +423,11 @@ function renderTimeline() {
       ${e.log ? `<div class="log">📝 ${e.log}</div>` : ''}</div></div>`;
   }
   document.getElementById('timeline').innerHTML = h;
+  const notionUrl = planWho === 'RANI'
+    ? 'https://app.notion.com/p/3799e8ba205180ffaa90fe8abae83472'
+    : 'https://app.notion.com/p/e0f2104f3d584859b34bc0517ffe81e3';
+  document.getElementById('plan-src').innerHTML =
+    `<a href="${notionUrl}" target="_blank" class="notion-btn">📝 노션에서 일정 수정하기 ↗</a>`;
 }
 
 // ───────────────────────── 스탭 ─────────────────────────
