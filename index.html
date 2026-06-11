@@ -633,7 +633,12 @@ document.querySelectorAll('nav button').forEach(b => b.addEventListener('click',
 
 // ───────────────────────── 초기화 ─────────────────────────
 renderHero(); renderClock(); renderTimeline(); renderStaff(); renderBudget();
-setInterval(() => { renderHero(); renderClock(); renderTimeline(); }, 30000);
+setInterval(() => { renderHero(); renderClock(); renderTimeline(); }, 10000);
+
+// 모바일 백그라운드 후 복귀 시 즉시 갱신 (iOS PWA / 안드로이드 크롬 throttle 대응)
+function refreshAll() { renderHero(); renderClock(); renderTimeline(); }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshAll(); });
+window.addEventListener('pageshow', e => { if (e.persisted) refreshAll(); }); // iOS bfcache 대응
 addMsg('안녕하세요! 푸꾸옥 촬영 일정 비서예요. 🌴<br>지금 뭘 해야 하는지, 어디로 가야 하는지, 다음 일정이 뭔지 물어보세요.', 'bot');
 </script>
 </body>
