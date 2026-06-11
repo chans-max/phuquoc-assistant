@@ -87,7 +87,7 @@
     border-radius: 9px; padding: 7px 10px; line-height: 1.45; }
   .evt.now { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .evt.now .t { color: var(--accent); }
-  .evt.done { opacity: 0.5; }
+  .evt.done { opacity: 1; }
   .badge { font-size: 10.5px; font-weight: 800; color: #fff; background: var(--accent); border-radius: 6px; padding: 1px 7px; margin-left: 6px; vertical-align: 2px; }
 
   /* staff */
@@ -138,16 +138,16 @@
   .bsec { font-size: 13px; font-weight: 800; color: var(--sub); margin: 14px 2px 8px; }
 
   /* swipe-to-edit */
-  .evt-wrap { position: relative; margin-bottom: 8px; border-radius: 14px; overflow: hidden; }
-  .evt-wrap .evt { margin-bottom: 0; border-radius: 14px; position: relative; z-index: 1;
+  .evt-wrap { position: relative; margin-bottom: 8px; }
+  .evt-wrap .evt { margin-bottom: 0; position: relative; z-index: 1;
     transition: transform 0.22s cubic-bezier(.4,0,.2,1); will-change: transform; }
-  .evt-wrap.swiped .evt { transform: translateX(-76px); }
-  .swipe-edit { position: absolute; right: 0; top: 0; bottom: 0; width: 76px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--accent); border-radius: 0 14px 14px 0; }
-  .swipe-edit a { color: #fff; font-size: 13px; font-weight: 700; text-decoration: none;
-    padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-  .swipe-edit a span { font-size: 16px; }
+  .evt-wrap.swiped .evt { transform: translateX(-80px); }
+  .evt-wrap.done .evt { opacity: 0.5; }
+  .evt-wrap.done .swipe-edit { display: none; }
+  .swipe-edit { position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+    display: flex; align-items: center; justify-content: center; }
+  .swipe-edit a { background: var(--accent); color: #fff; font-size: 13.5px; font-weight: 700;
+    text-decoration: none; padding: 10px 16px; border-radius: 10px; }
 </style>
 </head>
 <body>
@@ -466,8 +466,8 @@ function renderTimeline() {
     }
     const cls = now >= e.e ? 'done' : (now >= e.s ? 'now' : '');
     const notionUrl = e.nid ? `https://app.notion.com/p/${e.nid}` : '#';
-    h += `<div class="evt-wrap">
-      <div class="swipe-edit"><a href="${notionUrl}" target="_blank"><span>✏️</span>수정</a></div>
+    h += `<div class="evt-wrap${cls === 'done' ? ' done' : ''}">
+      <div class="swipe-edit"><a href="${notionUrl}" target="_blank">수정</a></div>
       <div class="evt ${cls}">
         <div class="t">${evtTimeLabel(e)}</div>
         <div class="body"><div class="n">${e.title}${cls === 'now' ? '<span class="badge">NOW</span>' : ''}</div>
