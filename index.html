@@ -79,6 +79,8 @@
   .evt .t { min-width: 78px; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--sub); padding-top: 1px; }
   .evt .body .n { font-size: 14.5px; font-weight: 700; letter-spacing: -0.2px; }
   .evt .body .d { font-size: 12.5px; color: var(--sub); margin-top: 2px; }
+  .evt .body .log { font-size: 12.5px; color: var(--accent); margin-top: 5px; background: var(--accent-soft);
+    border-radius: 9px; padding: 7px 10px; line-height: 1.45; }
   .evt.now { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .evt.now .t { color: var(--accent); }
   .evt.done { opacity: 0.5; }
@@ -145,7 +147,7 @@
     <div class="info-row"><span class="k">소통 담당</span><span class="v">최재주 책임 <a href="tel:010-8911-0424" style="color:var(--accent)">010-8911-0424</a></span></div>
     <div class="info-row"><span class="k">출국 미팅포인트</span><span class="v">인천 T1 3층 L카운터<br>(12번 게이트) 앞</span></div>
   </div>
-  <p class="src">데이터 출처: <a href="https://app.notion.com/p/culturalcontents/e0f2104f3d584859b34bc0517ffe81e3" target="_blank">Notion 일정표 원본 보기 ↗</a><br>2026-06-10 동기화 · 일정 변경 시 Notion 확인</p>
+  <p class="src">데이터 출처: <a href="https://app.notion.com/p/culturalcontents/e0f2104f3d584859b34bc0517ffe81e3" target="_blank">Notion 일정표 원본 보기 ↗</a><br>2026-06-11 동기화 · 일정 변경 시 Notion 확인</p>
 </section>
 
 <nav>
@@ -161,10 +163,12 @@
 const EVENTS = [
   { date:'2026-06-10', start:'13:00', end:'17:20', tz:'KR', title:'인천공항 도착/미팅포인트 확인 및 T1촬영',
     desc:'1터미널 3층 L카운터(12번 게이트) 앞 집결', loc:'인천공항 T1 3층 L카운터(12번 게이트) 앞',
-    tips:['여권·경비(달러/동) 소지 확인','보조배터리는 기내 휴대','출국 전 외장하드 용량 확인'] },
+    tips:['여권·경비(달러/동) 소지 확인','보조배터리는 기내 휴대','출국 전 외장하드 용량 확인'],
+    log:'공항 촬영은 허가 필요(임시허가증 발급 대상)였음 — 비공식으로 촬영. 간단한 소감 인터뷰 진행, 대부분 팀빌딩에 관심(이번에 처음 하는 프로그램).' },
   { date:'2026-06-10', start:'17:20', end:'21:25', endTz:'VN', tz:'KR', title:'제주항공 7C2315 (인천→푸꾸옥)',
     desc:'항공편 이동 · 17:20 인천 출발(한국시간) → 21:25 푸꾸옥 도착(현지시간)', loc:'기내',
-    tips:['도착하면 시계를 현지시간(-2시간)으로','입국 서류 미리 준비'] },
+    tips:['도착하면 시계를 현지시간(-2시간)으로','입국 서류 미리 준비'],
+    log:'관제탑 허가가 18시 넘어 나와 늦게 출발. 기내 면세 이벤트로 가위바위보 진행.' },
   { date:'2026-06-10', start:'21:25', end:'23:00', tz:'VN', title:'푸꾸옥 도착 후 공항 촬영, 호텔 이동/호텔 촬영',
     desc:'푸꾸옥 공항에서 이스타 항공 들어오는 것 찍고 호텔 이동. 호텔 도착 후 영상 촬영', loc:'푸꾸옥 공항 → 호텔',
     tips:['카메라 FX30·배터리 바로 꺼낼 수 있게','야간 촬영 대비 렌즈 선택'] },
@@ -337,7 +341,8 @@ function renderTimeline() {
     h += `<div class="evt ${cls}">
       <div class="t">${evtTimeLabel(e)}</div>
       <div class="body"><div class="n">${e.title}${cls === 'now' ? '<span class="badge">NOW</span>' : ''}</div>
-      ${e.desc ? `<div class="d">${e.desc}</div>` : ''}</div></div>`;
+      ${e.desc ? `<div class="d">${e.desc}</div>` : ''}
+      ${e.log ? `<div class="log">📝 ${e.log}</div>` : ''}</div></div>`;
   }
   document.getElementById('timeline').innerHTML = h;
 }
@@ -377,10 +382,10 @@ function renderStaff() {
 }
 
 // ───────────────────────── 비서 Q&A ─────────────────────────
-const QUICKS = ['지금 뭐 해야 해?', '다음 일정은?', '오늘 일정', '어디로 가야 해?', '뭘 챙겨야 해?', '담당자 연락처', '경비 얼마?', '비행기 정보'];
+const QUICKS = ['지금 뭐 해야 해?', '다음 일정은?', '오늘 일정', '어디로 가야 해?', '촬영일지', '뭘 챙겨야 해?', '담당자 연락처', '경비 얼마?', '비행기 정보'];
 
 function evtLine(e, withDay) {
-  return `<b>${withDay ? fmtDay(e.date) + ' ' : ''}${evtTimeLabel(e)}</b> ${e.title}${e.loc ? `<br><span class="small">📍 ${e.loc}</span>` : ''}${e.desc ? `<br><span class="small">${e.desc}</span>` : ''}`;
+  return `<b>${withDay ? fmtDay(e.date) + ' ' : ''}${evtTimeLabel(e)}</b> ${e.title}${e.loc ? `<br><span class="small">📍 ${e.loc}</span>` : ''}${e.desc ? `<br><span class="small">${e.desc}</span>` : ''}${e.log ? `<br><span class="small">📝 ${e.log}</span>` : ''}`;
 }
 function tipsLine(e) { return e.tips.length ? `<br><span class="small">💡 ${e.tips.join(' · ')}</span>` : ''; }
 
@@ -421,6 +426,14 @@ function answer(qRaw) {
       <li><b>출국</b> 6/10(수) 제주항공 7C2315 — 인천 17:20(KST) → 푸꾸옥 21:25(현지)</li>
       <li><b>귀국</b> 6/13(토) 푸꾸옥 22:25(현지) 출발 → 6/14(일) 06:05 인천 입국수속</li></ul>
       <span class="small">출국 집결: 6/10 13:00, 인천 T1 3층 L카운터(12번 게이트) 앞 · 귀국 공항이동: 6/13 20:00, 5–9호차 (염초희 대리·박지운 책임 동행)</span>`;
+  }
+
+  // 촬영일지
+  if (/촬영일지|일지|후기|뭐찍|뭘찍|찍었|기록/.test(q)) {
+    const logged = EVENTS.filter(e => e.log);
+    if (!logged.length) return '아직 작성된 촬영일지가 없어요. 촬영 후 Notion에 기록하면 여기에 반영돼요.';
+    return `📝 <b>촬영일지</b> (${logged.length}건)<ul>` +
+      logged.map(e => `<li>${evtLine(e, true)}</li>`).join('') + '</ul>';
   }
 
   // 준비물
@@ -484,7 +497,7 @@ function answer(qRaw) {
     .map(w => w.replace(/(은|는|이|가|을|를|의|에서|에는|으로|로|에)$/, ''))
     .filter(w => w.length >= 2 && !STOP.includes(w));
   if (tokens.length) {
-    const hits = EVENTS.filter(e => tokens.some(t => (e.title + (e.desc || '') + (e.loc || '')).includes(t)));
+    const hits = EVENTS.filter(e => tokens.some(t => (e.title + (e.desc || '') + (e.loc || '') + (e.log || '')).includes(t)));
     if (hits.length) return `"<b>${tokens.join(', ')}</b>" 관련 일정이에요.<ul>` + hits.map(e => `<li>${evtLine(e, true)}${tipsLine(e)}</li>`).join('') + '</ul>';
   }
 
