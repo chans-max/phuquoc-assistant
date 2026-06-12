@@ -480,6 +480,14 @@ function renderTimeline() {
     </div>`;
   }
   document.getElementById('timeline').innerHTML = h;
+  scrollToNow(false);
+}
+function scrollToNow(smooth) {
+  const planTab = document.getElementById('tab-plan');
+  if (!planTab || !planTab.classList.contains('on')) return;
+  const nowEl = document.querySelector('#timeline .evt.now');
+  const target = nowEl ? nowEl.closest('.evt-wrap') || nowEl : document.querySelector('#timeline .evt:not(.done)');
+  if (target) target.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'center' });
 }
 
 // ───────────────────────── 스와이프 수정 ─────────────────────────
@@ -755,6 +763,7 @@ document.querySelectorAll('nav button').forEach(b => b.addEventListener('click',
   document.querySelectorAll('section').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
   document.getElementById('tab-' + b.dataset.tab).classList.add('on');
+  if (b.dataset.tab === 'plan') scrollToNow(true);
 }));
 
 // ───────────────────────── 초기화 ─────────────────────────
